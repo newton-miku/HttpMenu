@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>控制页面</title>
@@ -10,6 +11,7 @@
             margin: 0;
             padding: 0;
         }
+
         .container {
             max-width: 600px;
             margin: 0 auto;
@@ -17,23 +19,28 @@
             background-color: #fff;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
+
         h1 {
             text-align: center;
             margin-top: 0;
         }
+
         .control-item {
             margin-bottom: 20px;
         }
+
         .control-item label {
             display: inline-block;
             width: 150px;
             font-weight: bold;
             vertical-align: middle;
         }
+
         .control-item input[type="range"] {
             width: 250px;
             vertical-align: middle;
         }
+
         .control-item .slider-value {
             display: inline-block;
             width: 40px;
@@ -41,6 +48,7 @@
             font-weight: bold;
             margin-left: 10px;
         }
+
         .button {
             display: block;
             margin-top: 20px;
@@ -54,6 +62,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h1>控制页面</h1>
@@ -64,17 +73,19 @@
         </div>
         <div class="control-item">
             <label for="max_dist">Max Dist:</label>
-            <input type="range" id="max_dist" min="0" max="1200" step="0.1" oninput="updateSliderValue(this, 'maxDistValue')">
+            <input type="range" id="max_dist" min="0" max="1200" step="0.1"
+                oninput="updateSliderValue(this, 'maxDistValue')">
             <span class="slider-value" id="maxDistValue"></span>
         </div>
         <div class="control-item">
             <label for="max_fov">Max FOV:</label>
-            <input type="range" id="max_fov" min="0" max="30" step="0.1" oninput="updateSliderValue(this, 'maxFovValue')">
+            <input type="range" id="max_fov" min="0" max="30" step="0.1"
+                oninput="updateSliderValue(this, 'maxFovValue')">
             <span class="slider-value" id="maxFovValue"></span>
         </div>
         <div class="control-item">
             <label for="team_player">Team Player:</label>
-            <input type="text" id="team_player">
+            <input type="text" id="team_player" oninput="updateControls()">
         </div>
         <div class="control-item">
             <label for="aim">Aim:</label>
@@ -98,6 +109,8 @@
 
     <script>
         var isBackendUrlValid = false;
+        var isChanging = false;
+        const controls = document.querySelectorAll("input[type='range'], input[type='text'], input[type='checkbox']");
 
         // 获取后端API的地址
         function getApiUrl() {
@@ -107,29 +120,38 @@
 
         // 获取控制变量的值
         function getControlValues() {
-            fetch(getApiUrl())
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById("max").value = data.max.toFixed(1);
-                    document.getElementById("maxValue").textContent = data.max.toFixed(1);
-                    document.getElementById("max_dist").value = data.max_dist.toFixed(1);
-                    document.getElementById("maxDistValue").textContent = data.max_dist.toFixed(1);
-                    document.getElementById("max_fov").value = data.max_fov.toFixed(1);
-                    document.getElementById("maxFovValue").textContent = data.max_fov.toFixed(1);
-                    document.getElementById("team_player").value = data.team_player;
-                    document.getElementById("aim").checked = data.aim;
-                    document.getElementById("esp").checked = data.esp;
-                    document.getElementById("item_glow").checked = data.item_glow;
-                    document.getElementById("player_glow").checked = data.player_glow;
-                })
-                .catch(error => {
-                    console.log("Error:", error);
-                });
+            if (!isChanging)
+                fetch(getApiUrl())
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById("max").value = data.max.toFixed(1);
+                        document.getElementById("maxValue").textContent = data.max.toFixed(1);
+                        document.getElementById("max_dist").value = data.max_dist.toFixed(1);
+                        document.getElementById("maxDistValue").textContent = data.max_dist.toFixed(1);
+                        document.getElementById("max_fov").value = data.max_fov.toFixed(1);
+                        document.getElementById("maxFovValue").textContent = data.max_fov.toFixed(1);
+                        document.getElementById("team_player").value = data.team_player;
+                        document.getElementById("aim").checked = data.aim;
+                        document.getElementById("esp").checked = data.esp;
+                        document.getElementById("item_glow").checked = data.item_glow;
+                        document.getElementById("player_glow").checked = data.player_glow;
+                    })
+                    .catch(error => {
+                        console.log("Error:", error);
+                    });
+            else isChanging = false;
         }
 
         // 更新滑块数值显示
         function updateSliderValue(slider, valueId) {
             document.getElementById(valueId).textContent = slider.value;
+            isChanging = true;
+        }
+
+        // 定期更新控制变量的值
+        function startAutoUpdate() {
+            getControlValues();
+            setInterval(getControlValues, 1000); // 每秒更新一次
         }
 
         // 验证后端地址是否有效
@@ -141,7 +163,10 @@
                         console.log("Backend URL is valid");
                         document.getElementById("updateButton").innerText = "更新控制变量";
                         document.getElementById("updateButton").onclick = updateControls;
-                        getControlValues();
+                        controls.forEach(control => {
+                            control.addEventListener("change", updateControls);
+                        });
+                        startAutoUpdate();
                     } else {
                         console.log("Failed to validate backend URL");
                     }
@@ -208,11 +233,13 @@
             }
         }
 
+
+
         // 页面加载完成后，获取初始控制变量的值
         document.addEventListener("DOMContentLoaded", () => {
             validateBackendUrl();
         });
     </script>
 </body>
-</html>
 
+</html>
