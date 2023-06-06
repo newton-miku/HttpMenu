@@ -22,4 +22,4 @@
 
 ### 编译运行
 
-拉取项目后打开文件夹，运行build.sh即可进行编译，如遇缺失依赖库，可使用sudo apt install libjansson-dev libcpp-httplib-dev安装
+拉取项目后打开文件夹，运行build.sh即可进行编译，如遇缺失依赖库，可使用`sudo apt install libjansson-dev libcpp-httplib-dev`安装
